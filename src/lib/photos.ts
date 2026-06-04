@@ -13,7 +13,7 @@ export type Photo = {
   created_at: string;
 };
 
-export type PhotoWithUrl = Photo & { url: string; author?: { display_name: string | null; avatar_url: string | null } };
+export type PhotoWithUrl = Photo & { url: string };
 
 export async function extractExifGps(file: File): Promise<{ lat?: number; lng?: number; takenAt?: string }> {
   try {
@@ -60,30 +60,14 @@ export async function uploadPhoto(opts: {
 }
 
 export async function listPhotosWithUrls(): Promise<PhotoWithUrl[]> {
-  const { data: photos, error } = await supabase
-    .from("photos")
-    .select("*, profiles:profiles!photos_user_id_fkey(display_name, avatar_url)")
-    .order("created_at", { ascending: false });
-  if (error) {
-    // Fallback without join if FK alias fails
-    const fb = await supabase.from("photos").select("*").order("created_at", { ascending: false });
-    if (fb.error) throw fb.error;
-    return signAll(fb.data as Photo[]);
-  }
-  return signAll(
-    (photos as (Photo & { profiles?: { display_name: string | null; avatar_url: string | null } })[]).map((p) => ({
-      ...p,
-      author: p.profiles ?? undefined,
-    })),
-  );
-}
-
-async function signAll(photos: (Photo & { author?: PhotoWithUrl["author"] })[]): Promise<PhotoWithUrl[]> {
+  const { data, error } = await supabase.from("photos").select("*").order("created_at", { ascending: false });
+  if (error) throw error;
+  const photos = data as Photo[];
   if (photos.length === 0) return [];
   const paths = photos.map((p) => p.storage_path);
-  const { data, error } = await supabase.storage.from("photos").createSignedUrls(paths, 60 * 60);
-  if (error) throw error;
-  const urlMap = new Map(data.map((d) => [d.path, d.signedUrl]));
+  const signed = await supabase.storage.from("photos").createSignedUrls(paths, 60 * 60);
+  if (signed.error) throw signed.error;
+  const urlMap = new Map(signed.data.map((d) => [d.path, d.signedUrl]));
   return photos.map((p) => ({ ...p, url: urlMap.get(p.storage_path) ?? "" }));
 }
 
