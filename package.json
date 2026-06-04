@@ -9,7 +9,9 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "pre-deploy": "node scripts/pre-deploy-check.js",
+    "deploy": "node scripts/pre-deploy-check.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
