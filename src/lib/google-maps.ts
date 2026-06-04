@@ -1,14 +1,13 @@
 // Loads the Google Maps JS API once and resolves when google.maps is ready.
-let promise: Promise<typeof google> | null = null;
+let promise: Promise<typeof window.google> | null = null;
 
 declare global {
   interface Window {
     __initGoogleMaps?: () => void;
-    google: typeof google;
   }
 }
 
-export function loadGoogleMaps(): Promise<typeof google> {
+export function loadGoogleMaps(): Promise<typeof window.google> {
   if (typeof window === "undefined") return Promise.reject(new Error("Maps requires browser"));
   if (window.google?.maps) return Promise.resolve(window.google);
   if (promise) return promise;
