@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
+import { APP_VERSION } from "@/lib/app-version";
 
 function NotFoundComponent() {
   return (
@@ -53,6 +54,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
+      { name: "app-version", content: APP_VERSION },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Atlas — Bilder på kartan" },
       { name: "description", content: "Ladda upp bilder och se dem placerade på kartan via GPS-data från EXIF." },
@@ -74,7 +76,13 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="sv" className="dark">
       <head><HeadContent /></head>
-      <body>{children}<Scripts /></body>
+      <body>
+        {children}
+        <div aria-hidden="true" className="pointer-events-none fixed bottom-1.5 right-2 text-[11px] text-muted-foreground/60">
+          Version {APP_VERSION}
+        </div>
+        <Scripts />
+      </body>
     </html>
   );
 }
